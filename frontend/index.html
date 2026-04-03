@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI-Based Multilingual Crop Recommendation System</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1 data-i18n="app_title">AI-Based Multilingual Crop Recommendation System</h1>
+        <p data-i18n="subtitle">Smart guidance for crop planning using soil, weather, and AI.</p>
+      </header>
+
+      <section class="card">
+        <label for="languageSelect" data-i18n="select_language">Select Language</label>
+        <select id="languageSelect">
+          <option value="en">English</option>
+          <option value="hi">हिंदी</option>
+          <option value="te">తెలుగు</option>
+        </select>
+      </section>
+
+      <section class="card grid">
+        <h2 data-i18n="soil_inputs">Soil Inputs</h2>
+        <label>N <input type="number" id="N" /></label>
+        <label>P <input type="number" id="P" /></label>
+        <label>K <input type="number" id="K" /></label>
+        <label>pH <input type="number" step="0.01" id="ph" /></label>
+      </section>
+
+      <section class="card">
+        <h2 data-i18n="ocr_upload">Soil Report Image (OCR)</h2>
+        <input type="file" id="soilImage" accept="image/*" />
+        <button id="uploadBtn" data-i18n="upload">Upload</button>
+        <p id="ocrStatus"></p>
+      </section>
+
+      <section class="card grid">
+        <h2 data-i18n="location_weather">Location & Weather</h2>
+        <label data-i18n="city_label">City
+          <input type="text" id="city" placeholder="Hyderabad" />
+        </label>
+        <div class="row">
+          <button id="gpsBtn" data-i18n="use_gps">Use GPS</button>
+        </div>
+        <label data-i18n="duration_label">Crop Duration (days)
+          <input type="number" id="duration" min="1" max="180" value="90" />
+        </label>
+        <input type="hidden" id="latitude" />
+        <input type="hidden" id="longitude" />
+      </section>
+
+      <section class="card actions">
+        <button id="predictAutoBtn" data-i18n="predict_auto">Predict with Auto Weather</button>
+      </section>
+
+      <section class="card">
+        <h2 data-i18n="results">Results</h2>
+        <pre id="resultBox"></pre>
+      </section>
+    </main>
+
+    <script src="js/app.js" type="module"></script>
+  </body>
+</html>
