@@ -1,0 +1,17 @@
+{
+  "app_title": "AI-Based Multilingual Crop Recommendation System",
+  "subtitle": "Smart guidance for crop planning using soil, weather, and AI.",
+  "select_language": "Select Language",
+  "soil_inputs": "Soil Inputs",
+  "ocr_upload": "Soil Report Image (OCR)",
+  "upload": "Upload",
+  "location_weather": "Location & Weather",
+  "city_label": "City",
+  "use_gps": "Use GPS",
+  "duration_label": "Crop Duration (days)",
+  "predict_auto": "Predict with Auto Weather",
+  "results": "Results",
+  "speak_enter_location": "Enter your location",
+  "speak_upload": "Upload your soil report for automatic extraction",
+  "speak_result": "Top crop recommendations are ready"
+}
