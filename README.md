@@ -68,6 +68,8 @@ pip install -r requirements.txt
 ```bash
 cat > .env <<'EOF'
 OPENWEATHER_API_KEY=your_openweather_api_key_here
+# Optional: set to false in production to avoid returning OTP in API response
+EXPOSE_VERIFICATION_CODE_IN_RESPONSE=true
 EOF
 ```
 
@@ -91,6 +93,22 @@ uvicorn backend.app.main:app --reload --port 8000
 python -m http.server 5500 --directory frontend
 ```
 Then open `http://localhost:5500`.
+
+### Quick start (run backend + frontend together)
+
+If you want one command to start everything and open the UI automatically:
+
+```bash
+python start_project.py
+```
+
+Windows users can also double-click:
+
+```bat
+start_project.bat
+```
+
+> Note: Opening `frontend/index.html` directly from file explorer (`file://...`) will not start Python backend services. Use the quick-start command above.
 
 ## API Endpoints
 

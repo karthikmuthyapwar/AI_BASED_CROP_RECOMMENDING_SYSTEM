@@ -32,7 +32,21 @@ async function loadLanguage(lang) {
 
   document.querySelectorAll("[data-i18n]").forEach((node) => {
     const key = node.dataset.i18n;
-    if (translations[key]) node.textContent = translations[key];
+    if (!translations[key]) return;
+
+    if (node.tagName === "LABEL" && node.querySelector("input, select, textarea")) {
+      const existingTextNode = Array.from(node.childNodes).find(
+        (child) => child.nodeType === Node.TEXT_NODE
+      );
+      if (existingTextNode) {
+        existingTextNode.textContent = `${translations[key]} `;
+      } else {
+        node.insertBefore(document.createTextNode(`${translations[key]} `), node.firstChild);
+      }
+      return;
+    }
+
+    node.textContent = translations[key];
   });
 }
 
@@ -133,7 +147,12 @@ async function sendVerificationCode() {
         password: el("signupPassword").value,
       }),
     });
-    el("authStatus").textContent = data.message;
+    if (data.verification_code) {
+      el("verifyCode").value = data.verification_code;
+      el("authStatus").textContent = `${data.message} Code auto-filled in Verification Code field.`;
+    } else {
+      el("authStatus").textContent = data.message;
+    }
   } catch (err) {
     el("authStatus").textContent = err.message;
   }
