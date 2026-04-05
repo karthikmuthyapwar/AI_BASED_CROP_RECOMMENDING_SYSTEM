@@ -66,8 +66,9 @@ pip install -r requirements.txt
 
 2. Configure weather key:
 ```bash
-cp .env.example .env
-# edit .env and set OPENWEATHER_API_KEY
+cat > .env <<'EOF'
+OPENWEATHER_API_KEY=your_openweather_api_key_here
+EOF
 ```
 
 3. Generate sample dataset (already committed but reproducible):
@@ -93,12 +94,36 @@ Then open `http://localhost:5500`.
 
 ## API Endpoints
 
+### Authentication Flow
+
+1) Register a unique user:
+```bash
+curl -X POST http://localhost:8000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"farmer1","password":"StrongPass123"}'
+```
+
+2) Login and receive bearer token:
+```bash
+curl -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"farmer1","password":"StrongPass123"}'
+```
+
+3) Use token for protected recommendation endpoints:
+```bash
+curl -X GET http://localhost:8000/auth/me \
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
+```
+
 ### 1) `POST /predict`
 Manual direct prediction endpoint using full features.
+Requires `Authorization: Bearer <ACCESS_TOKEN>`.
 
 Example:
 ```bash
 curl -X POST http://localhost:8000/predict \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{
     "N":90,"P":42,"K":43,
@@ -118,9 +143,11 @@ curl -X POST http://localhost:8000/upload \
 
 ### 3) `POST /predict-auto`
 Location + duration + soil values; weather is fetched automatically.
+Requires `Authorization: Bearer <ACCESS_TOKEN>`.
 
 ```bash
 curl -X POST http://localhost:8000/predict-auto \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{
     "N":90,"P":42,"K":43,"ph":6.5,
@@ -128,6 +155,14 @@ curl -X POST http://localhost:8000/predict-auto \
     "duration_days":90,
     "top_k":3
   }'
+```
+
+### 4) `GET /recent-recommendations`
+Returns only the logged-in user's recent searches with timestamps (privacy scoped per user).
+
+```bash
+curl -X GET "http://localhost:8000/recent-recommendations?limit=10" \
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
 ```
 
 ## OCR Confidence Behavior
