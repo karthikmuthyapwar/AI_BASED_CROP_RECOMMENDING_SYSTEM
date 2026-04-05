@@ -2,10 +2,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.config import settings
+from backend.app.db.database import init_db
 from backend.app.routes.predict import router as predict_router
 from backend.app.utils.logger import configure_logging
 
 configure_logging()
+init_db()
 
 app = FastAPI(title=settings.app_name)
 

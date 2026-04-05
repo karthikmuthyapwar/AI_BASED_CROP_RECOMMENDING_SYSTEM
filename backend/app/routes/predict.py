@@ -1,9 +1,23 @@
 import logging
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Header, HTTPException, Query, UploadFile
 
+from backend.app.db.database import (
+    create_session,
+    create_user,
+    get_recent_recommendations,
+    get_user_by_token,
+    save_recommendation,
+)
 from backend.app.model.model_service import CropModelService
 from backend.app.ocr.ocr_service import SoilOCRService
+from backend.app.schemas.auth import (
+    AuthResponse,
+    LoginRequest,
+    RecommendationHistoryResponse,
+    RegisterRequest,
+    UserResponse,
+)
 from backend.app.schemas.predict import LocationInput, OCRResponse, PredictionResult, SoilInput
 from backend.app.weather.weather_service import WeatherService
 
@@ -38,8 +52,55 @@ def get_ocr_service() -> SoilOCRService:
     return ocr_service
 
 
+def get_current_user(authorization: str = Header(default="")) -> dict[str, str | int]:
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing Bearer token")
+    token = authorization.removeprefix("Bearer ").strip()
+    user = get_user_by_token(token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    return user
+
+
+@router.post("/auth/register", response_model=UserResponse, tags=["auth"])
+async def register(payload: RegisterRequest) -> UserResponse:
+    try:
+        user = create_user(payload.username, payload.password)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    return UserResponse(id=int(user["id"]), username=str(user["username"]))
+
+
+@router.post("/auth/login", response_model=AuthResponse, tags=["auth"])
+async def login(payload: LoginRequest) -> AuthResponse:
+    try:
+        session = create_session(payload.username, payload.password)
+    except ValueError as exc:
+        raise HTTPException(status_code=401, detail=str(exc)) from exc
+
+    return AuthResponse.model_validate(session)
+
+
+@router.get("/auth/me", response_model=UserResponse, tags=["auth"])
+async def me(current_user: dict[str, str | int] = Depends(get_current_user)) -> UserResponse:
+    return UserResponse(id=int(current_user["id"]), username=str(current_user["username"]))
+
+
+@router.get("/recent-recommendations", response_model=RecommendationHistoryResponse)
+async def recent_recommendations(
+    limit: int = Query(default=10, ge=1, le=50),
+    current_user: dict[str, str | int] = Depends(get_current_user),
+) -> RecommendationHistoryResponse:
+    rows = get_recent_recommendations(int(current_user["id"]), limit=limit)
+    return RecommendationHistoryResponse(items=rows)
+
+
 @router.post("/predict", response_model=PredictionResult)
-async def predict(payload: SoilInput) -> PredictionResult:
+async def predict(
+    payload: SoilInput,
+    current_user: dict[str, str | int] = Depends(get_current_user),
+) -> PredictionResult:
     model_service = get_model_service()
     features = payload.model_dump()
     top_k = features.pop("top_k")
@@ -50,6 +111,13 @@ async def predict(payload: SoilInput) -> PredictionResult:
         "total_rainfall": payload.rainfall,
         "note": "User provided weather-independent values.",
     }
+    save_recommendation(
+        user_id=int(current_user["id"]),
+        endpoint="/predict",
+        input_payload=payload.model_dump(),
+        weather_used=weather_used,
+        top_predictions=predictions,
+    )
     return PredictionResult(top_predictions=predictions, weather_used=weather_used)
 
 
@@ -73,7 +141,10 @@ async def upload_soil_report(file: UploadFile = File(...)) -> OCRResponse:
 
 
 @router.post("/predict-auto", response_model=PredictionResult)
-async def predict_auto(payload: LocationInput) -> PredictionResult:
+async def predict_auto(
+    payload: LocationInput,
+    current_user: dict[str, str | int] = Depends(get_current_user),
+) -> PredictionResult:
     model_service = get_model_service()
     if payload.city:
         lat, lon = await weather_service.geocode_city(payload.city)
@@ -99,4 +170,11 @@ async def predict_auto(payload: LocationInput) -> PredictionResult:
     }
 
     predictions = model_service.predict_top_k(features, top_k=payload.top_k)
+    save_recommendation(
+        user_id=int(current_user["id"]),
+        endpoint="/predict-auto",
+        input_payload=payload.model_dump(),
+        weather_used=weather_summary,
+        top_predictions=predictions,
+    )
     return PredictionResult(top_predictions=predictions, weather_used=weather_summary)
