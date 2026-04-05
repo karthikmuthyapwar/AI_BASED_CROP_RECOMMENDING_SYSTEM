@@ -7,60 +7,119 @@
     <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body>
-    <main class="container">
-      <header>
-        <h1 data-i18n="app_title">AI-Based Multilingual Crop Recommendation System</h1>
-        <p data-i18n="subtitle">Smart guidance for crop planning using soil, weather, and AI.</p>
-      </header>
+    <div class="layout">
+      <aside class="sidebar" id="sidebar">
+        <h3 data-i18n="menu">Menu</h3>
+        <button id="menuDashboard" data-i18n="dashboard">Dashboard</button>
+        <button id="menuHistory" data-i18n="previous_predictions">Previous Predictions</button>
+        <button id="menuLogout" data-i18n="logout">Logout</button>
+      </aside>
 
-      <section class="card">
-        <label for="languageSelect" data-i18n="select_language">Select Language</label>
-        <select id="languageSelect">
-          <option value="en">English</option>
-          <option value="hi">हिंदी</option>
-          <option value="te">తెలుగు</option>
-        </select>
-      </section>
+      <main class="container">
+        <header class="topbar">
+          <div>
+            <h1 data-i18n="app_title">AI-Based Multilingual Crop Recommendation System</h1>
+            <p data-i18n="subtitle">Smart guidance for crop planning using soil, weather, and AI.</p>
+          </div>
+          <div>
+            <label for="languageSelect" data-i18n="select_language">Select Language</label>
+            <select id="languageSelect">
+              <option value="en">English</option>
+              <option value="hi">हिंदी</option>
+              <option value="te">తెలుగు</option>
+            </select>
+          </div>
+        </header>
 
-      <section class="card grid">
-        <h2 data-i18n="soil_inputs">Soil Inputs</h2>
-        <label>N <input type="number" id="N" /></label>
-        <label>P <input type="number" id="P" /></label>
-        <label>K <input type="number" id="K" /></label>
-        <label>pH <input type="number" step="0.01" id="ph" /></label>
-      </section>
+        <section id="authSection" class="card">
+          <h2 data-i18n="login_or_signup">Login / Create Account</h2>
+          <div class="row">
+            <button id="showLogin" data-i18n="login">Login</button>
+            <button id="showSignup" data-i18n="create_account">Create Account</button>
+          </div>
 
-      <section class="card">
-        <h2 data-i18n="ocr_upload">Soil Report Image (OCR)</h2>
-        <input type="file" id="soilImage" accept="image/*" />
-        <button id="uploadBtn" data-i18n="upload">Upload</button>
-        <p id="ocrStatus"></p>
-      </section>
+          <div id="loginForm" class="formBlock">
+            <label data-i18n="username">Username
+              <input type="text" id="loginUsername" />
+            </label>
+            <label data-i18n="password">Password
+              <input type="password" id="loginPassword" />
+            </label>
+            <button id="loginBtn" data-i18n="login">Login</button>
+          </div>
 
-      <section class="card grid">
-        <h2 data-i18n="location_weather">Location & Weather</h2>
-        <label data-i18n="city_label">City
-          <input type="text" id="city" placeholder="Hyderabad" />
-        </label>
-        <div class="row">
-          <button id="gpsBtn" data-i18n="use_gps">Use GPS</button>
-        </div>
-        <label data-i18n="duration_label">Crop Duration (days)
-          <input type="number" id="duration" min="1" max="180" value="90" />
-        </label>
-        <input type="hidden" id="latitude" />
-        <input type="hidden" id="longitude" />
-      </section>
+          <div id="signupForm" class="formBlock hidden">
+            <label data-i18n="username">Username
+              <input type="text" id="signupUsername" />
+            </label>
+            <label data-i18n="email">Email
+              <input type="email" id="signupEmail" />
+            </label>
+            <label data-i18n="password">Password
+              <input type="password" id="signupPassword" />
+            </label>
+            <button id="sendCodeBtn" data-i18n="send_verification">Send Verification Code</button>
+            <label data-i18n="verification_code">Verification Code
+              <input type="text" id="verifyCode" maxlength="6" />
+            </label>
+            <button id="verifyBtn" data-i18n="verify_and_create">Verify & Create Account</button>
+          </div>
+          <p id="authStatus"></p>
+        </section>
 
-      <section class="card actions">
-        <button id="predictAutoBtn" data-i18n="predict_auto">Predict with Auto Weather</button>
-      </section>
+        <section id="languageSetup" class="card hidden">
+          <h2 data-i18n="set_default_language">Set Default Language</h2>
+          <p data-i18n="first_time_language">First login detected. Please choose your default language.</p>
+          <button id="saveDefaultLanguage" data-i18n="save_default_language">Save Default Language</button>
+        </section>
 
-      <section class="card">
-        <h2 data-i18n="results">Results</h2>
-        <pre id="resultBox"></pre>
-      </section>
-    </main>
+        <section id="dashboardSection" class="hidden">
+          <section class="card grid">
+            <h2 data-i18n="soil_inputs">Soil Inputs</h2>
+            <label>N <input type="number" id="N" /></label>
+            <label>P <input type="number" id="P" /></label>
+            <label>K <input type="number" id="K" /></label>
+            <label>pH <input type="number" step="0.01" id="ph" /></label>
+          </section>
+
+          <section class="card">
+            <h2 data-i18n="ocr_upload">Soil Report Image (OCR)</h2>
+            <input type="file" id="soilImage" accept="image/*" />
+            <button id="uploadBtn" data-i18n="upload">Upload</button>
+            <p id="ocrStatus"></p>
+          </section>
+
+          <section class="card grid">
+            <h2 data-i18n="location_weather">Location & Weather</h2>
+            <label data-i18n="city_label">City
+              <input type="text" id="city" placeholder="Hyderabad" />
+            </label>
+            <div class="row">
+              <button id="gpsBtn" data-i18n="use_gps">Use GPS</button>
+            </div>
+            <label data-i18n="duration_label">Crop Duration (days)
+              <input type="number" id="duration" min="1" max="180" value="90" />
+            </label>
+            <input type="hidden" id="latitude" />
+            <input type="hidden" id="longitude" />
+          </section>
+
+          <section class="card actions">
+            <button id="predictAutoBtn" data-i18n="predict_auto">Predict with Auto Weather</button>
+          </section>
+
+          <section class="card">
+            <h2 data-i18n="results">Results</h2>
+            <pre id="resultBox"></pre>
+          </section>
+        </section>
+
+        <section id="historySection" class="card hidden">
+          <h2 data-i18n="previous_predictions">Previous Predictions</h2>
+          <ul id="historyList"></ul>
+        </section>
+      </main>
+    </div>
 
     <script src="js/app.js" type="module"></script>
   </body>
