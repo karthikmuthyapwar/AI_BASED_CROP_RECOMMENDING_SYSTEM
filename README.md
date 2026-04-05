@@ -102,6 +102,8 @@ If you want one command to start everything and open the UI automatically:
 python start_project.py
 ```
 
+The launcher auto-trains the model if `backend/app/model/model.pkl` is missing.
+
 Windows users can also double-click:
 
 ```bat

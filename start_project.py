@@ -13,6 +13,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 BACKEND_PORT = 8000
 FRONTEND_PORT = 5500
+MODEL_PATH = ROOT / "backend" / "app" / "model" / "model.pkl"
 
 
 def start_process(command: list[str], name: str) -> subprocess.Popen:
@@ -31,7 +32,21 @@ def stop_process(proc: subprocess.Popen, name: str) -> None:
         proc.kill()
 
 
+def ensure_model() -> None:
+    if MODEL_PATH.exists():
+        return
+    print(f"[setup] Model not found at {MODEL_PATH}. Training model...")
+    train_cmd = [sys.executable, "scripts/train_model.py"]
+    completed = subprocess.run(train_cmd, cwd=ROOT, check=False)
+    if completed.returncode != 0:
+        raise RuntimeError("Model training failed. Please run scripts/train_model.py manually.")
+    if not MODEL_PATH.exists():
+        raise RuntimeError(f"Training completed but model file is still missing at {MODEL_PATH}.")
+
+
 def main() -> int:
+    ensure_model()
+
     backend_cmd = [
         sys.executable,
         "-m",
