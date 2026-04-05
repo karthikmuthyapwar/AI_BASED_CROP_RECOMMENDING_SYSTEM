@@ -1,5 +1,5 @@
 import logging
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import httpx
 
@@ -90,5 +90,5 @@ class WeatherService:
             "avg_humidity": round(avg_humidity, 2),
             "total_rainfall": round(total_rainfall, 2),
             "note": info,
-            "generated_at": datetime.now(UTC).isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
         }
