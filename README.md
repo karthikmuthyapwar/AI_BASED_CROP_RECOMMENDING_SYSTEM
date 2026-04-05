@@ -189,6 +189,9 @@ curl -X GET "http://localhost:8000/recent-recommendations?limit=10" \
 - **High** (`>=0.75`): Auto-fill directly.
 - **Medium** (`0.45-0.74`): Auto-fill and ask verification.
 - **Low** (`<0.45`): Show fallback message for manual entry.
+- OCR also supports molecular forms for nutrients in reports:
+  - `P2O5` is converted to elemental `P` using factor `0.4364`
+  - `K2O` is converted to elemental `K` using factor `0.8301`
 
 ## Weather Logic
 - City name is geocoded to latitude/longitude.

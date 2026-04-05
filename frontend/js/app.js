@@ -15,6 +15,14 @@ const appState = {
   user: JSON.parse(localStorage.getItem("user") || "null"),
 };
 
+function setButtonLoading(buttonId, loadingText, isLoading) {
+  const button = el(buttonId);
+  if (!button) return;
+  if (!button.dataset.defaultText) button.dataset.defaultText = button.textContent;
+  button.disabled = isLoading;
+  button.textContent = isLoading ? loadingText : button.dataset.defaultText;
+}
+
 async function api(path, options = {}) {
   const headers = options.headers || {};
   if (appState.token) headers.Authorization = `Bearer ${appState.token}`;
@@ -74,6 +82,19 @@ function persistForm() {
     if (el(id)) values[id] = el(id).value;
   });
   localStorage.setItem("form", JSON.stringify(values));
+}
+
+function clearPredictionForm() {
+  ["N", "P", "K", "ph", "city", "duration", "latitude", "longitude"].forEach((id) => {
+    if (el(id)) el(id).value = "";
+  });
+  localStorage.removeItem("form");
+  localStorage.removeItem("last_result");
+  el("resultBox").textContent = "";
+  el("ocrStatus").textContent = "";
+  el("locationStatus").textContent = "";
+  renderClimateDetails({});
+  refreshPredictButtonState();
 }
 
 function isLocationFilled() {
@@ -151,6 +172,7 @@ async function login() {
     } else {
       el("languageSetup").classList.add("hidden");
     }
+    clearPredictionForm();
     showDashboard();
     await loadHistory();
   } catch (err) {
@@ -229,6 +251,8 @@ function renderClimateDetails(weatherUsed = {}) {
 }
 
 async function uploadImage() {
+  setButtonLoading("uploadBtn", "Extracting values from image...", true);
+  el("ocrStatus").textContent = "Extracting values from image...";
   try {
     const file = el("soilImage").files[0];
     if (!file) return;
@@ -258,10 +282,14 @@ async function uploadImage() {
     persistForm();
   } catch (err) {
     el("ocrStatus").textContent = err.message;
+  } finally {
+    setButtonLoading("uploadBtn", "Extracting values from image...", false);
   }
 }
 
 async function predictAuto() {
+  setButtonLoading("predictAutoBtn", "Predicting final output... Please wait", true);
+  el("resultBox").textContent = "Predicting final output... Please wait";
   try {
     const payload = {
       N: Number(el("N").value),
@@ -285,11 +313,15 @@ async function predictAuto() {
     persistForm();
   } catch (err) {
     el("resultBox").textContent = err.message;
+  } finally {
+    setButtonLoading("predictAutoBtn", "Predicting final output... Please wait", false);
   }
 }
 
 function useGps() {
   if (!navigator.geolocation) return;
+  setButtonLoading("gpsBtn", "Getting location...", true);
+  el("locationStatus").textContent = "Getting location...";
   navigator.geolocation.getCurrentPosition(async (pos) => {
     el("latitude").value = pos.coords.latitude;
     el("longitude").value = pos.coords.longitude;
@@ -317,6 +349,11 @@ function useGps() {
 
     persistForm();
     refreshPredictButtonState();
+    el("locationStatus").textContent = "Location detected successfully.";
+    setButtonLoading("gpsBtn", "Getting location...", false);
+  }, (error) => {
+    el("locationStatus").textContent = `Unable to get location: ${error.message}`;
+    setButtonLoading("gpsBtn", "Getting location...", false);
   });
 }
 

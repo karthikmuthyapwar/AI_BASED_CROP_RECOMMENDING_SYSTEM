@@ -55,6 +55,22 @@ class SoilOCRService:
             return None
         return float(match.group(1))
 
+    @staticmethod
+    def _extract_with_molecule_fallback(text: str, nutrient: str) -> float | None:
+        if nutrient == "P":
+            elemental = SoilOCRService._extract_value(text, ["p", "phosphorus"])
+            if elemental is not None:
+                return elemental
+            p2o5 = SoilOCRService._extract_value(text, ["p2o5", "p₂o₅"])
+            return round(p2o5 * 0.4364, 2) if p2o5 is not None else None
+        if nutrient == "K":
+            elemental = SoilOCRService._extract_value(text, ["k", "potassium"])
+            if elemental is not None:
+                return elemental
+            k2o = SoilOCRService._extract_value(text, ["k2o", "k₂o"])
+            return round(k2o * 0.8301, 2) if k2o is not None else None
+        return None
+
     def extract_soil_values(self, image_bytes: bytes) -> OCRExtraction:
         processed = self.preprocess_image(image_bytes)
         results = self.reader.readtext(processed)
@@ -74,8 +90,8 @@ class SoilOCRService:
 
         extracted = {
             "N": self._extract_value(combined, ["n", "nitrogen"]),
-            "P": self._extract_value(combined, ["p", "phosphorus"]),
-            "K": self._extract_value(combined, ["k", "potassium"]),
+            "P": self._extract_with_molecule_fallback(combined, "P"),
+            "K": self._extract_with_molecule_fallback(combined, "K"),
             "ph": self._extract_value(combined, ["ph", "p.h", "soil ph"]),
         }
 

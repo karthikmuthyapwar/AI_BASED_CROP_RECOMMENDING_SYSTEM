@@ -60,10 +60,15 @@ button {
   color: #fff;
   border-radius: 8px;
   cursor: pointer;
+  transition: transform .08s ease, opacity .15s ease;
+}
+button:active {
+  transform: scale(0.98);
 }
 button:disabled {
   background: #9ca3af;
   cursor: not-allowed;
+  opacity: 0.9;
 }
 pre { white-space: pre-wrap; word-wrap: break-word; }
 .hidden { display: none; }
