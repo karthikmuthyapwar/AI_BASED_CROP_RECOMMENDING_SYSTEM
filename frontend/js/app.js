@@ -147,7 +147,12 @@ async function sendVerificationCode() {
         password: el("signupPassword").value,
       }),
     });
-    el("authStatus").textContent = data.message;
+    if (data.verification_code) {
+      el("verifyCode").value = data.verification_code;
+      el("authStatus").textContent = `${data.message} Code auto-filled in Verification Code field.`;
+    } else {
+      el("authStatus").textContent = data.message;
+    }
   } catch (err) {
     el("authStatus").textContent = err.message;
   }

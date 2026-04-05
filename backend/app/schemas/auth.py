@@ -23,6 +23,7 @@ class SetLanguageRequest(BaseModel):
 
 class MessageResponse(BaseModel):
     message: str
+    verification_code: str | None = None
 
 
 class LoginRequest(BaseModel):

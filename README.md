@@ -68,6 +68,8 @@ pip install -r requirements.txt
 ```bash
 cat > .env <<'EOF'
 OPENWEATHER_API_KEY=your_openweather_api_key_here
+# Optional: set to false in production to avoid returning OTP in API response
+EXPOSE_VERIFICATION_CODE_IN_RESPONSE=true
 EOF
 ```
 
