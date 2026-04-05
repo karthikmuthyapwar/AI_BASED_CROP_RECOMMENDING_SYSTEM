@@ -2,6 +2,7 @@ import logging
 
 from fastapi import APIRouter, Depends, File, Header, HTTPException, Query, UploadFile
 
+from backend.app.config import settings
 from backend.app.db.database import (
     create_session,
     create_user,
@@ -97,6 +98,11 @@ async def register_email(payload: RegisterEmailRequest) -> MessageResponse:
 
     if sent:
         return MessageResponse(message="Verification code sent to your email")
+    if settings.expose_verification_code_in_response:
+        return MessageResponse(
+            message="SMTP is not configured. Using on-screen verification code for local development.",
+            verification_code=code,
+        )
     return MessageResponse(message="SMTP is not configured. Check backend logs for verification code")
 
 

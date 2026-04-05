@@ -32,7 +32,21 @@ async function loadLanguage(lang) {
 
   document.querySelectorAll("[data-i18n]").forEach((node) => {
     const key = node.dataset.i18n;
-    if (translations[key]) node.textContent = translations[key];
+    if (!translations[key]) return;
+
+    if (node.tagName === "LABEL" && node.querySelector("input, select, textarea")) {
+      const existingTextNode = Array.from(node.childNodes).find(
+        (child) => child.nodeType === Node.TEXT_NODE
+      );
+      if (existingTextNode) {
+        existingTextNode.textContent = `${translations[key]} `;
+      } else {
+        node.insertBefore(document.createTextNode(`${translations[key]} `), node.firstChild);
+      }
+      return;
+    }
+
+    node.textContent = translations[key];
   });
 }
 
@@ -62,11 +76,33 @@ function persistForm() {
   localStorage.setItem("form", JSON.stringify(values));
 }
 
+function isLocationFilled() {
+  const city = (el("city")?.value || "").trim();
+  const lat = el("latitude")?.value;
+  const lon = el("longitude")?.value;
+  return Boolean(city) || (lat !== "" && lon !== "");
+}
+
+function isPredictFormValid() {
+  const requiredIds = ["N", "P", "K", "ph", "duration"];
+  return requiredIds.every((id) => {
+    const value = el(id)?.value;
+    return value !== undefined && value !== null && String(value).trim() !== "";
+  }) && isLocationFilled();
+}
+
+function refreshPredictButtonState() {
+  const predictBtn = el("predictAutoBtn");
+  if (!predictBtn) return;
+  predictBtn.disabled = !isPredictFormValid();
+}
+
 function restoreForm() {
   const saved = JSON.parse(localStorage.getItem("form") || "{}");
   Object.entries(saved).forEach(([key, value]) => {
     if (el(key)) el(key).value = value;
   });
+  refreshPredictButtonState();
 }
 
 function showDashboard() {
@@ -133,7 +169,12 @@ async function sendVerificationCode() {
         password: el("signupPassword").value,
       }),
     });
-    el("authStatus").textContent = data.message;
+    if (data.verification_code) {
+      el("verifyCode").value = data.verification_code;
+      el("authStatus").textContent = `${data.message} Code auto-filled in Verification Code field.`;
+    } else {
+      el("authStatus").textContent = data.message;
+    }
   } catch (err) {
     el("authStatus").textContent = err.message;
   }
@@ -233,11 +274,33 @@ async function predictAuto() {
 
 function useGps() {
   if (!navigator.geolocation) return;
-  navigator.geolocation.getCurrentPosition((pos) => {
+  navigator.geolocation.getCurrentPosition(async (pos) => {
     el("latitude").value = pos.coords.latitude;
     el("longitude").value = pos.coords.longitude;
-    el("city").value = "";
+
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=jsonv2`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        const address = data.address || {};
+        const detectedCity =
+          address.city || address.town || address.village || address.county || address.state;
+        if (detectedCity) {
+          el("city").value = detectedCity;
+        } else {
+          el("city").value = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+        }
+      } else {
+        el("city").value = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+      }
+    } catch {
+      el("city").value = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+    }
+
     persistForm();
+    refreshPredictButtonState();
   });
 }
 
@@ -295,7 +358,10 @@ el("menuHistory").addEventListener("click", showHistory);
 el("menuLogout").addEventListener("click", logout);
 
 ["N", "P", "K", "ph", "city", "duration"].forEach((id) => {
-  el(id)?.addEventListener("input", persistForm);
+  el(id)?.addEventListener("input", () => {
+    persistForm();
+    refreshPredictButtonState();
+  });
 });
 
 (async () => {
@@ -304,6 +370,7 @@ el("menuLogout").addEventListener("click", logout);
   restoreForm();
   const lastResult = localStorage.getItem("last_result");
   if (lastResult) el("resultBox").textContent = JSON.stringify(JSON.parse(lastResult), null, 2);
+  refreshPredictButtonState();
 
   if (appState.token) {
     try {
